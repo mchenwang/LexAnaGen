@@ -1,0 +1,3 @@
+D:\Tools\CMake\bin\cmake.exe -E rm -f CMakeFiles\LexicalAnalyzer.dir/objects.a
+D:\Language\MinGW\bin\ar.exe cr CMakeFiles\LexicalAnalyzer.dir/objects.a @CMakeFiles\LexicalAnalyzer.dir\objects1.rsp
+D:\Language\MinGW\bin\g++.exe -Wall -Wl,--whole-archive CMakeFiles\LexicalAnalyzer.dir/objects.a -Wl,--no-whole-archive -o LexicalAnalyzer.exe -Wl,--out-implib,libLexicalAnalyzer.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\LexicalAnalyzer.dir\linklibs.rsp
