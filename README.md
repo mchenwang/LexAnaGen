@@ -18,9 +18,13 @@
   
 - 项目构建与运行
 
-   - for Windows + MinGW32
-      > .\\> mkdir build
-      > .\\> cd build
-      > .\\> cmake -G "MinGW Makefiles" ..
-      > .\\> mingw32-make
-      > .\\> LexicalAnalyzer.exe
+   - 运行环境
+      - CMake 3.18
+      - C++ 17
+
+   - for Windows + MinGW
+      > .\\> mkdir build <br>
+      > .\\> cd build <br>
+      > .\\> cmake -G "MinGW Makefiles" .. <br>
+      > .\\> mingw32-make <br>
+      > .\\> LexicalAnalyzer.exe <br>
