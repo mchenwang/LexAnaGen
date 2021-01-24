@@ -7,14 +7,14 @@ SEPARATOR
 SYMBOL
 STRING
 %
-ID [_a-zA-Z][_a-zA-Z0-9]*
 NUMBER [0-1]*
-KEYWORD include
-KEYWORD int
-KEYWORD const
-KEYWORD char
-KEYWORD main
-KEYWORD return
+KEYWORD include 
+KEYWORD int 
+KEYWORD const 
+KEYWORD char 
+KEYWORD main 
+KEYWORD return 
+ID [_a-zA-Z][_a-zA-Z0-9]*
 OPERATOR =
 OPERATOR &
 OPERATOR ==

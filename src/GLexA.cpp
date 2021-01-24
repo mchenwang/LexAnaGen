@@ -19,6 +19,7 @@ bool GLexAnalyzer::Generate(DFA dfa, const char* save_path){
     }
 
     std::cout<<"#include <iostream>"<<std::endl
+             <<"#include <iomanip>"<<std::endl
              <<"#include <string>"<<std::endl
              <<"using namespace std;"<<std::endl
              <<"using state = int;"<<std::endl
@@ -92,7 +93,7 @@ bool GLexAnalyzer::Generate(DFA dfa, const char* save_path){
              <<"                if(now == 0) break;"<<std::endl
              <<"                if(now == -1 || getType(now).empty()){"<<std::endl
              <<"                    if(last != -1){"<<std::endl
-             <<"                        cout<<line.substr(start, last_index-start+1)<<\" \"<<getType(last)<<endl;"<<std::endl
+             <<"                        cout<<std::setw(10)<<std::setfill(' ')<<std::left<<getType(last)<<\" \"<<line.substr(start, last_index-start+1)<<endl;"<<std::endl
              <<"                        now = 0, last = -1;"<<std::endl
              <<"                        start = i = last_index+1;"<<std::endl
              <<"                        continue;"<<std::endl
@@ -100,14 +101,14 @@ bool GLexAnalyzer::Generate(DFA dfa, const char* save_path){
              <<"                    cerr<<line.substr(start, i-start)<<\" error\"<<endl;"<<std::endl
              <<"                    return 1;"<<std::endl
              <<"                }"<<std::endl
-             <<"                cout<<line.substr(start, i-start)<<\" \"<<getType(now)<<endl;"<<std::endl
+             <<"                cout<<std::setw(10)<<std::setfill(' ')<<std::left<<getType(now)<<\" \"<<line.substr(start, i-start)<<endl;"<<std::endl
              <<"                break;"<<std::endl
              <<"            }"<<std::endl
              <<"            if(line[i]=='/' && i<len-1){"<<std::endl
              <<"                if(line[i+1] == '/' || line[i+1] == '*'){"<<std::endl
              <<"                    if(now == -1 || (now!=0 && getType(now).empty())){"<<std::endl
              <<"                        if(last != -1){"<<std::endl
-             <<"                            cout<<line.substr(start, last_index-start+1)<<\" \"<<getType(last)<<endl;"<<std::endl
+             <<"                            cout<<std::setw(10)<<std::setfill(' ')<<std::left<<getType(last)<<\" \"<<line.substr(start, last_index-start+1)<<endl;"<<std::endl
              <<"                            now = 0, last = -1;"<<std::endl
              <<"                            start = i = last_index+1;"<<std::endl
              <<"                            continue;"<<std::endl
@@ -115,7 +116,7 @@ bool GLexAnalyzer::Generate(DFA dfa, const char* save_path){
              <<"                        cerr<<line.substr(start, i-start)<<\" error\"<<endl;"<<std::endl
              <<"                        return 1;"<<std::endl
              <<"                    }"<<std::endl
-             <<"                    if(!getType(now).empty()) cout<<line.substr(start, i-start)<<\" \"<<getType(now)<<endl;"<<std::endl
+             <<"                    if(!getType(now).empty()) cout<<std::setw(10)<<std::setfill(' ')<<std::left<<getType(now)<<\" \"<<line.substr(start, i-start)<<endl;"<<std::endl
              <<"                    is_annotation = 1, now = 0;"<<std::endl
              <<"                    if(line[i+1] == '/') break;"<<std::endl
              <<"                    is_annotation = 2, i += 2;"<<std::endl
@@ -130,7 +131,7 @@ bool GLexAnalyzer::Generate(DFA dfa, const char* save_path){
              <<"            now = transform(now, line[i]);"<<std::endl
              <<"            if(now == -1){"<<std::endl
              <<"                if(last != -1){"<<std::endl
-             <<"                    cout<<line.substr(start, last_index-start+1)<<\" \"<<getType(last)<<endl;"<<std::endl
+             <<"                    cout<<std::setw(10)<<std::setfill(' ')<<std::left<<getType(last)<<\" \"<<line.substr(start, last_index-start+1)<<endl;"<<std::endl
              <<"                    now = 0, last = -1;"<<std::endl
              <<"                    start = i = last_index+1;"<<std::endl
              <<"                    continue;"<<std::endl

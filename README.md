@@ -24,10 +24,3 @@
       > .\\> cmake -G "MinGW Makefiles" ..
       > .\\> mingw32-make
       > .\\> LexicalAnalyzer.exe
-
-   - for Linux
-      > .\\> mkdir build
-      > .\\> cd build
-      > .\\> cmake ..
-      > .\\> make
-      > .\\> LexicalAnalyzer.exe
