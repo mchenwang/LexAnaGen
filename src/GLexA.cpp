@@ -34,7 +34,7 @@ bool GLexAnalyzer::Generate(DFA dfa, const char* save_path){
         for(const char c: char_table){
             auto to_ptr = dfa.from_to.find(path{from, CharElem::c(c)});
             if(to_ptr == dfa.from_to.end()) continue;
-            if(c == '\'')
+            if(c == '\'' || c == '\\')
     std::cout<<"        if(character == '\\"<<c<<"') return "<<index[to_ptr->second]<<";"<<std::endl;
             else
     std::cout<<"        if(character == '"<<c<<"') return "<<index[to_ptr->second]<<";"<<std::endl;

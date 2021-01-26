@@ -156,16 +156,19 @@ void NFA::StrToREE()
                 // re_nodes.emplace_back(std::make_shared<ConnectElem>());
                 cnt.pop();
             }
+            // else if(str[i] == '(') {
+            //     stk.push(str[i]);
+            // }
             else if(priority(str[i]) == 1) {
                 re_nodes.emplace_back(CreateElem(str[i]));
             }
             else if(priority(str[i]) == 0) stk.push(str[i]);
             else{
-                while(!stk.empty() && stk.top() != '('){
-                    re_nodes.emplace_back(CreateElem(stk.top()));
-                    if(dynamic_cast<ConnectElem*>(re_nodes.back().get())) cnt.top()--;
-                    stk.pop();
-                }
+                // while(!stk.empty() && stk.top() != '('){
+                //     re_nodes.emplace_back(CreateElem(stk.top()));
+                //     if(dynamic_cast<ConnectElem*>(re_nodes.back().get())) cnt.top()--;
+                //     stk.pop();
+                // }
                 cnt.top()++;
                 cnt.push(0);
                 stk.push(str[i]);
@@ -189,7 +192,7 @@ void NFA::StrToREE()
     }
     while(cnt.top()>1) re_nodes.push_back(std::make_shared<ConnectElem>()), cnt.top()--;
 #ifdef TEST_NFA
-    std::cout<<std::endl;
+    std::cout<<"*************** RE suffix"<<std::endl;
     for (auto node: re_nodes)
     {
         std::cout<<node->type()<<" ";
@@ -224,6 +227,7 @@ void GNFA::UnionNFAs(FinalNFA &ret, std::vector<NFA> &nfas)
     }
     
     #ifdef TEST_NFA
+    std::cout<<"************ NFA"<<std::endl;
     for(auto it=ret.from_to.begin();it!=ret.from_to.end();){
         std::cout<<(it->first).first.get()->val()<<" =>\n";
         auto se = (it->first).second;
@@ -325,7 +329,7 @@ void NFA::GenNFA()
         }
         stk.push(temp);
     }
-    #ifdef TEST_NFA
+    #ifdef TEST_NFAx
     assert(stk.size() == 1);
     this->start = stk.top().start;
     this->end = stk.top().end;
@@ -394,6 +398,6 @@ bool GetNFA(GNFA::FinalNFA& ret)
     std::cout<<nfas.size()<<" sub-NFAs are gotten."<<std::endl;
     std::cout<<err_cnt<<" inputs are error."<<std::endl;
     GNFA::UnionNFAs(ret, nfas);
-    state_count.clear();
+    std::unordered_map<LexType, int>().swap(state_count);
     return 0;
 }

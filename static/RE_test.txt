@@ -6,7 +6,6 @@ OPERATOR
 SEPARATOR
 SYMBOL
 STRING
-%
 NUMBER [0-1]*
 KEYWORD include 
 KEYWORD int 
@@ -37,3 +36,6 @@ SYMBOL <
 SYMBOL >
 SYMBOL "
 SYMBOL '
+ID (0|(1(01*(00)*0)*1)*)*
+%
+ID ((1(01*(00)*0)*1)*|0)*

@@ -1,4 +1,4 @@
-#define TEST
+#define TESTx
 
 #ifdef TEST
     #define REPATH ("../static/RE_test.txt")
@@ -12,4 +12,5 @@
     #define REPATH ("../static/RE.txt")
     #define CHARTABLE ("../static/Chars.txt")
     #define RENAME ("RE.txt")
+    #define ANAPATH ("../target/analyzer.cpp")
 #endif

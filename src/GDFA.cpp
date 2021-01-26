@@ -91,16 +91,10 @@ void DFA::NFAToDFA(NFA& nfa)
             this->from_to.emplace(path{from, cE->val()}, to);
             q.emplace(I1, to);
             this->nodes.emplace(to);
-            #ifdef TEST_DFAx
-            std::cout<<std::endl<<from->val()<<std::endl;
-            for(auto ii=I1.begin();ii!=I1.end();ii++){
-                std::cout<<(*ii)->val()<<" ";
-            }
-            std::cout<<std::endl;
-            #endif
         }
     }
     #ifdef TEST_DFA
+    std::cout<<"**************** DFA"<<std::endl;
     int cnt = 0;
     for(auto it=this->from_to.begin();it!=this->from_to.end();it++){
         ++cnt;
@@ -113,111 +107,158 @@ void DFA::NFAToDFA(NFA& nfa)
     #endif
 }
 
+size_t findp(std::vector<size_t>& p, size_t x) { return x==p[x]?x:p[x]=findp(p, p[x]); }
+
+template<class T> void clear_swap(T& x){ T().swap(x); }
+
 void DFA::Minimize()
 {
-    state_count["mDFA"] = 0;
-    int* counter = &state_count["mDFA"];
-    std::vector<std::set<state>> G;         // nodes during minimization
-    // std::vector<size_t> Gp;
-    // auto emplace = [&G, &Gp](std::set<state>& g, size_t gp) {
-    //     G.emplace_back(g);
-    //     Gp.emplace_back(gp);
-    // };
-    // auto pop = [&G, &Gp]() {
-    //     G.pop_back();
-    //     Gp.pop_back();
-    // };
-    // emplace(std::set<state>(), 0);
-    // emplace(std::set<state>(), 1);
-    G.emplace_back(std::set<state>());
-    G.emplace_back(std::set<state>());
-    std::queue<std::set<state>> q;          // use to traversal
-    std::map<state, std::set<state>> p;              // union-find sets
-    for(auto& node: this->nodes){
+    clear_swap(state_count);
+    std::vector<state> nodes(this->nodes.size());
+    std::unordered_map<state, size_t> index;
+    size_t i = 0, start_index = -1;
+    for(auto& node: this->nodes) index[node] = i, nodes[i++] = node;
+    std::vector<size_t> p(nodes.size());
+    std::vector<std::vector<size_t>> end_G;
+    std::vector<std::vector<size_t>> G;
+    i = 0;
+    for(i = 0; i<nodes.size(); i++){
+        state& node = nodes[i];
+        if(node == this->start) start_index = i;
+        
         if(dynamic_cast<EndElem*>(node.get())){
-            G[0].emplace(node);
-            p[node] = G[0];
+            if(state_count.find(node->node_type) == state_count.end()){
+                state_count[node->node_type] = end_G.size();
+                end_G.push_back({i});
+            }
+            else end_G[state_count[node->node_type]].push_back(i);
+            p[i] = i;
         }
         else{
-            G[1].emplace(node);
-            p[node] = G[1];
+            if(G.size() == 0) G.push_back({i}), p[i] = i;
+            else G[0].push_back(i), p[i] = G[0][0]; // p[G[0][0]] == G[0][0]
         }
     }
-    if(G[1].size() == 0) G.pop_back();
-    int xxx = 0;
-    while(true){
-        // std::cout<<(xxx++)<<std::endl;
+    std::vector<bool> visable(char_table.size(), true);
 
-        bool has_change = false;
-        for(const char c: char_table){
-            // std::cout<<c<<std::endl;
-            auto cE = CreateElem(c, 1);
-            std::vector<std::set<state>> temp_G;
-            for(auto& g: G){
-                if(g.size() == 1) temp_G.emplace_back(g);
-                std::map<std::set<state>, size_t> map_to_next_G;
-                int first = temp_G.size();
-                temp_G.emplace_back(std::set<state>());
-                for(auto it=g.begin(); it!=g.end(); it++){
-                    auto to_it = this->from_to.find(path{*it, cE->val()});
-                    if(to_it == this->from_to.end()){
-                        temp_G[first].emplace(*it);
+    while(true){
+        bool change_flag = false;
+        // if(!visable[c_i++])
+        for(size_t c_i = 0; c_i<char_table.size(); c_i++) if(visable[c_i++]) {
+            char c = char_table[c_i];
+            std::vector<std::vector<size_t>> temp_G;
+            bool visable_flag = false;
+            for(size_t i=0;i<G.size();i++){
+                if(G[i].size() == 1) {
+                    temp_G.push_back(G[i]);
+                    continue;
+                }
+                std::vector<std::vector<size_t>> div_G;
+                std::vector<std::vector<size_t>> div_end_G;
+                std::unordered_map<int, size_t> map_to_div;
+                for(size_t j=0;j<G[i].size();j++){
+                    state& node = nodes[G[i][j]];
+                    auto ptr = this->from_to.find(path{node, CharElem::c(c)});
+                    if(ptr == this->from_to.end()) {
+                        if(map_to_div.find(-1) == map_to_div.end()){
+                            map_to_div[-1] = div_G.size();
+                            div_G.push_back({G[i][j]});
+                        }
+                        else div_G[map_to_div[-1]].push_back(G[i][j]);
                         continue;
                     }
-                    if(map_to_next_G.find(p[to_it->second]) == map_to_next_G.end()){
-                        map_to_next_G[p[to_it->second]] = temp_G.size();
-                        temp_G.push_back(std::set<state>({*it}));
+                    visable_flag = true;
+                    state& to = ptr->second;
+                    if(dynamic_cast<EndElem*>(to.get())){
+                        if(map_to_div.find(-index[to]-2) == map_to_div.end()){  // solve the conflict with -1
+                            map_to_div[-index[to]-2] = div_end_G.size();
+                            div_end_G.push_back({G[i][j]});
+                        }
+                        else div_end_G[map_to_div[-index[to]-2]].push_back(G[i][j]);
                     }
-                    else temp_G[map_to_next_G[p[to_it->second]]].emplace(*it);
+                    else{
+                        size_t f_to = findp(p, index[to]);
+                        if(map_to_div.find(f_to) == map_to_div.end()){
+                            map_to_div[f_to] = div_G.size();
+                            div_G.push_back({G[i][j]});
+                        }
+                        else div_G[map_to_div[f_to]].push_back(G[i][j]);
+                    }
                 }
-                if(temp_G[first].size() == 0) temp_G.erase(temp_G.begin()+first);
+                temp_G.insert(temp_G.end(), div_G.begin(), div_G.end());
+                temp_G.insert(temp_G.end(), div_end_G.begin(), div_end_G.end());
+                clear_swap(div_G);
+                clear_swap(div_end_G);
+                clear_swap(map_to_div);
             }
-            if(G.size() < temp_G.size()) has_change = true;
-            G = temp_G;
-            p.clear();
-            for(auto& g: G) for(auto& st: g) p[st] = g;
+            if(visable_flag == false) visable[c_i] = false;
+            if(G.size() < temp_G.size()) change_flag = true;
+            G.swap(temp_G);
+            for(size_t i=0;i<G.size();i++){
+                for(size_t j=0;j<G[i].size();j++) p[G[i][j]] = i;
+            }
+            clear_swap(temp_G);
         }
-        if(!has_change) break;
+        if(!change_flag) break;
     }
-
+    clear_swap(index);
+    std::vector<state> new_nodes;
+    bool start_flag = false, had_found = false;
+    for(i = 0; i < end_G.size(); i++){
+        for(size_t j = 0; !had_found&&j<end_G[i].size(); j++) if(end_G[i][j] == start_index) start_flag = had_found = true;
+        if(start_flag){
+            #ifdef TEST
+            // "start" is used for me to find out the start node
+            // however, which is not need for subsequent algorithm
+            this->start = CreateNode('e', "start"+nodes[end_G[i][0]]->node_type);
+            #else
+            this->start = CreateNode('e', std::move(nodes[end_G[i][0]]->node_type));
+            #endif
+            new_nodes.push_back(this->start);
+            start_flag = false;
+        }
+        else new_nodes.push_back(CreateNode('e', std::move(nodes[end_G[i][0]]->node_type)));
+        for(size_t j = 0; j<end_G[i].size(); j++) index[nodes[end_G[i][j]]] = new_nodes.size() - 1;
+    }
+    state_count["mDFA"] = 0;
+    int* counter = &state_count["mDFA"];
+    for(i = 0; i < G.size(); i++){
+        for(size_t j = 0; !had_found&&j<G[i].size(); j++) if(G[i][j] == start_index) start_flag = had_found = true;
+        if(start_flag){
+            this->start = CreateNode('s', "mDFA"), (*counter)++;
+            new_nodes.push_back(this->start);
+            start_flag = false;
+        }
+        else {new_nodes.push_back(CreateNode('n', "mDFA", (*counter)++));}
+        for(size_t j = 0; j<G[i].size(); j++) index[nodes[G[i][j]]] = new_nodes.size() - 1;
+    }
     std::map<path, state> new_from_to;
-    std::vector<state> mDFANode(G.size());
-    std::map<state, size_t> m;
-    size_t index = 0;
-    for(auto& g: G){
-        bool is_end = false;
-        bool is_start = false;
-        for(auto& st: g){
-            if(dynamic_cast<EndElem*>(st.get())) is_end = true;
-            if(st == start) is_start = true;
-        }
-        state G0;
-        if(is_start){
-            if(is_end) mDFANode[index] = CreateNode('e', "mDFAstart", (*counter)++);
-            else mDFANode[index] = CreateNode('s', "mDFA"), (*counter)++;
-            start = mDFANode[index];
-        }else{
-            if(is_end) mDFANode[index] = CreateNode('e', "mDFA", (*counter)++);
-            else mDFANode[index] = CreateNode('n', "mDFA", (*counter)++);
-        }
-        for(auto& st: g) m[st] = index;
-        index++;
-    }
-    index = 0;
-    for(auto& g: G){
-        for(auto& st: g){
+    for(i = 0; i<G.size(); i++){
+        for(size_t j=0; j<G[i].size(); j++){
             for(const char c: char_table){
-                auto cE = CreateElem(c, 1);
-                auto to_it = this->from_to.find(path{st, cE->val()});
-                if(to_it == this->from_to.end()) continue;
-                new_from_to.emplace(path{mDFANode[index], cE->val()}, mDFANode[m[to_it->second]]);
+                auto ptr = this->from_to.find(path{nodes[G[i][j]], CharElem::c(c)});
+                if(ptr == this->from_to.end()) continue;
+                state& node = ptr->second;
+                new_from_to.emplace(path{new_nodes[index[nodes[G[i][j]]]], CharElem::c(c)}, new_nodes[index[node]]);
             }
         }
-        index++;
     }
-    this->from_to = new_from_to;
-    // this->nodes = mDFANode;
+    for(i = 0; i<end_G.size(); i++){
+        for(size_t j=0; j<end_G[i].size(); j++){
+            for(const char c: char_table){
+                auto ptr = this->from_to.find(path{nodes[end_G[i][j]], CharElem::c(c)});
+                if(ptr == this->from_to.end()) continue;
+                state& node = ptr->second;
+                new_from_to.emplace(path{new_nodes[index[nodes[end_G[i][j]]]], CharElem::c(c)}, new_nodes[index[node]]);
+            }
+        }
+    }
+    this->from_to.swap(new_from_to);
+    clear_swap(this->nodes);
+    this->nodes.insert(new_nodes.begin(), new_nodes.end());
+    
     #ifdef TEST_mDFA
+    std::cout<<"**************** mDFA"<<std::endl;
     int cnt = 0;
     for(auto it=this->from_to.begin();it!=this->from_to.end();it++){
         ++cnt;
@@ -226,6 +267,6 @@ void DFA::Minimize()
         std::cout<<std::endl;
     }
     std::cout<<cnt<<" edges.\n";
-    std::cout<<nodes.size()<<" nodes.\n";
+    std::cout<<this->nodes.size()<<" nodes.\n";
     #endif
 }
